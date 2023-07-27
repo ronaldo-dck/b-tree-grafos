@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +15,13 @@ const t = 2 // Grau (ou ordem) da árvore B
 type DataType struct {
 	nome  string
 	index int
+}
+
+type Contato struct {
+	Nome     string
+	Endereco string
+	Telefone string
+	Apagado  bool
 }
 
 /******************************
@@ -271,95 +281,190 @@ func (tree *BTree) Remove(key string) {
 	tree.root.Remove(key)
 }
 
+func (nodo *BTreeNode) PercursoEmOrdem(listaIndex *[]int) {
+	if nodo == nil {
+		return
+	}
+
+	for i := 0; i < len(nodo.keys); i++ {
+		if nodo.leaf == false {
+			nodo.children[i].PercursoEmOrdem(listaIndex)
+		}
+		fmt.Printf("%s %d\n", nodo.keys[i].nome, nodo.keys[i].index)
+		*listaIndex = append(*listaIndex, nodo.keys[i].index)
+	}
+
+	// Percorre o último filho (se houver)
+	if nodo.leaf == false {
+		nodo.children[len(nodo.keys)].PercursoEmOrdem(listaIndex)
+	}
+}
+
+///////////////////////////////
+
+func setDados() Contato {
+
+	var contato Contato
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Printf("Nome: ")
+	scanner.Scan()
+	contato.Nome = scanner.Text()
+
+	fmt.Printf("Endereço: ")
+	scanner.Scan()
+	contato.Endereco = scanner.Text()
+
+	fmt.Printf("Telefone: ")
+	scanner.Scan()
+	contato.Telefone = scanner.Text()
+
+	contato.Apagado = false
+
+	return contato
+}
+
+func salvaDados(contato Contato, file *os.File) {
+	fmt.Fprintf(file, "%v;%v;%v;%v\n", contato.Nome, contato.Endereco, contato.Telefone, contato.Apagado)
+}
+
+func salvaIndex(nodo DataType, file *os.File) {
+	fmt.Fprintf(file, "%v;%v\n", nodo.index, nodo.nome)
+}
+
+func initTreeFromFile(fileName string, tree *BTree) int {
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println("Erro ao abrir ou criar o arquivo:", err)
+		return 0
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	maxIndex := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, ";")
+
+		if len(parts) != 2 {
+			// Ignorar linhas mal formatadas (sem ; ou com mais de um ;)
+			continue
+		}
+
+		index, err := strconv.Atoi(parts[0])
+
+		if err != nil {
+			// Ignorar linhas em que o índice não é um número válido
+			continue
+		}
+
+		if index > maxIndex {
+			maxIndex = index
+		}
+
+		nodo := DataType{parts[1], index}
+		tree.Insert(nodo)
+	}
+
+	return maxIndex + 1
+}
+
+func listarContatos(tree *BTree, fileName string) {
+	lista := make([]int, 0)
+	tree.root.PercursoEmOrdem(&lista)
+	fmt.Println(lista)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println("Erro ao abrir ou criar o arquivo:", err)
+		return
+	}
+	defer file.Close()
+
+	agenda := make([]Contato, 0)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, ";")
+
+		if len(parts) != 4 {
+			// Ignorar linhas mal formatadas (sem ; ou com mais de um ;)
+			continue
+		}
+		apagado := false
+		if parts[3] == "true" {
+			apagado = true
+		}
+
+		contato := Contato{parts[0], parts[1], parts[2], apagado}
+		agenda = append(agenda, contato)
+	}
+	for _, v := range lista {
+		fmt.Println(agenda[v])
+	}
+}
+
 func main() {
-	// Declaração de variáveis
 	var (
-		op   int
-		tree *BTree
+		tree       *BTree
+		indexAtual int
+		op         int
 	)
-	indexAtual := 0
+	tree = Init()
+	indexAtual = initTreeFromFile("indexFile.txt", tree)
+
+	indexFile, err := os.OpenFile("indexFile.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	if err != nil {
+		fmt.Println("Erro ao abrir ou criar o arquivo:", err)
+		return
+	}
+	defer indexFile.Close()
+
+	dataFile, err := os.OpenFile("dataFile.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	if err != nil {
+		fmt.Println("Erro ao abrir ou criar o arquivo:", err)
+		return
+	}
+	defer dataFile.Close()
+
+	println(indexAtual)
+	tree.root.Print("", true)
 
 	for {
-		// Limpa a tela
-		fmt.Println("ÁRVORES-B (B-Trees)")
-		fmt.Println("\t Menu Principal")
-		fmt.Println("[ 0] Sair")
-		fmt.Println("[ 1] Criar árvore")
-		fmt.Println("[ 2] Imprimir árvore")
-		fmt.Println("[ 3] Inserir elemento")
-		fmt.Println("[ 4] Remover elemento")
-		fmt.Println("[ 5] Procurar elemento")
+		fmt.Println("0 - Sair")
+		fmt.Println("1 - Inserir Contato")
+		fmt.Println("2 - Listar Contatos")
 
-		fmt.Print("\nQual a sua opção? >> ")
 		fmt.Scan(&op)
 		switch op {
 		case 0:
-			{
-				// Clear()
-				fmt.Println("Programa Encerrado!\nTecle [ENTER]")
-				fmt.Scanln(&op)
-				return
-			}
+			return
 		case 1:
-			{
-				// Clear()
-				fmt.Println("Criando árvore...")
-				tree = Init()
-				fmt.Println("Árvore criada!\n Tecle [ENTER]")
-
-			}
+			contato := setDados()
+			salvaDados(contato, dataFile)
+			nodo := DataType{contato.Nome, indexAtual}
+			tree.Insert(nodo)
+			salvaIndex(nodo, indexFile)
+			indexAtual++
 		case 2:
-			{
-				// Clear()
-				fmt.Println("Árvore armazenada:")
-				tree.root.Print("", true)
-				fmt.Println("\nTecle [ENTER]")
-
-			}
-		case 3:
-			{
-
-				fmt.Println("Inserindo elemento")
-				fmt.Print("Número a inserir >> ")
-				x := DataType{"", 0}
-				x.index = indexAtual
-				indexAtual++
-				fmt.Scanln(&x.nome)
-				tree.Insert(x)
-				fmt.Println("Elemento inserido. Tecle [ENTER]")
-			}
-		case 4:
-			{
-
-				fmt.Println("Removendo elemento")
-				fmt.Print("Número a remover >> ")
-				nome := ""
-				fmt.Scanln(&nome)
-				tree.Remove(nome)
-				fmt.Println("Elemento Removido. Tecle [ENTER]")
-
-			}
-		case 5:
-			{
-
-				fmt.Println("Procurar elemento")
-				fmt.Print("Número a procurar >> ")
-				nome := ""
-				fmt.Scanln(&nome)
-				a, i := tree.Search(nome)
-				if a == nil {
-					fmt.Println("Elemento não encontrado. Tecle [ENTER]")
-
-				} else {
-					fmt.Println(nome, "está na árvore:", a, " ", i)
-
-				}
-			}
-		default:
-			{
-				fmt.Println("Opção Inválida!\nTecle [ENTER]")
-				fmt.Scanln(&op)
-			}
+			listarContatos(tree, "dataFile.txt")
+		case 9:
+			tree.root.Print("", true)
 		}
+
 	}
+
+	/* // Inserção
+	// salval file;
+	//	constriu o dados Datatype
+
+	tree = Init()
+	// insere na arvore;
+
+	tree.root.Print("", true) */
+
 }
