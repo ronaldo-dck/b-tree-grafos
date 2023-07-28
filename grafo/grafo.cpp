@@ -76,6 +76,8 @@ private:
         custos = aux;
     }
 
+    // void dfs(int node, ){};
+
 public:
     Grafo(/* args */){};
     Grafo(string nameFile)
@@ -194,6 +196,10 @@ public:
         geraMatrizCustos();
     }
 
+    int GoodMan(){
+        return 0;
+    }
+
     void PrintInfos()
     {
         cout << "lista de arestas" << endl;
@@ -226,20 +232,87 @@ public:
         }
     }
 
-    bool Euleriano() {
-        
+    bool IsEuleriano()
+    {
+        for (int i = 0; i < size(custos); i++)
+        {
+            int contador = 0;
+            for (int j = 0; j < size(custos); j++)
+            {
+                if (custos[i][j] != 0)
+                {
+                    contador++;
+                }
+            }
+            if (contador % 2)
+                return false;
+        }
+
+        return true;
+    }
+
+    int compsConexos() {
+        vector<int> listaComps(size(vertices));
+
+        for (int i = 1; i < size(vertices); i++)
+        {
+            for (int j = 0; j < i; j++)
+            {
+                if (custos[i][j] != 0) {
+                    listaComps[i] = 1;
+                    listaComps[j] = 1;
+                }
+            }
+        }
+
+        int componentes = 1;
+        for (int i = 0; i < size(listaComps); i++) {
+            cout << listaComps[i] << " ";
+            if (listaComps[i] == 0)
+                componentes++;
+        }
+
+        return componentes;
     }
 };
+
+void dfs(int node, const std::vector<std::vector<int>>& graph, std::vector<bool>& visited) {
+    visited[node] = true;
+
+    for (int neighbor = 0; neighbor < graph.size(); ++neighbor) {
+        if (graph[node][neighbor] != 0 && !visited[neighbor]) {
+            dfs(neighbor, graph, visited);
+        }
+    }
+}
+
+int countConnectedComponents(const std::vector<std::vector<int>>& graph) {
+    int numNodes = graph.size();
+    std::vector<bool> visited(numNodes, false);
+    int numComponents = 0;
+
+    for (int node = 0; node < numNodes; ++node) {
+        if (!visited[node]) {
+            dfs(node, graph, visited);
+            ++numComponents;
+        }
+    }
+
+    return numComponents;
+}
+
 
 int main()
 {
     Grafo formiga("grafoIn.txt");
     int op;
     string label, A, B;
+    bool isEuler;
+    
 
     while (1)
     {
-        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n";
+        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n 6 - Verifica Euleriano\n 7 - Componentes desconexos\n";
         cin >> op;
         switch (op)
         {
@@ -281,6 +354,16 @@ int main()
             // cout << "Nome do arquivo: ";
             // cin >> label;
             formiga.SalvarGrafo("grafoOut.txt");
+            break;
+        case 6: 
+            isEuler = formiga.IsEuleriano();
+            if (isEuler)
+                cout << "O grafo é Euleriano!" << endl;
+            else 
+                cout << "O grafo NÃO é Euleriano!" << endl;
+            break;
+        case 7:
+            cout << "Número de componentes conexos : " << formiga.compsConexos() << endl;
             break;
         case 9:
             formiga.PrintInfos();
