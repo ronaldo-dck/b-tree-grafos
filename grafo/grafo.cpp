@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cmath>
+#include <queue>
 using namespace std;
 
 class Vertice
@@ -76,7 +77,44 @@ private:
         custos = aux;
     }
 
-    // void dfs(int node, ){};
+    void dfs(int node, vector<bool> &visitados)
+    {
+        visitados[node] = true;
+        cout << vertices[node].label << "->";
+
+        for (int vizinho = 0; vizinho < size(custos); ++vizinho)
+        {
+            if (custos[node][vizinho] != 0 && !visitados[vizinho])
+            {
+                dfs(vizinho, visitados);
+            }
+        }
+    }
+
+    void bfs(int startNode, vector<bool> &visitados)
+    {
+        int numNodes = size(vertices);
+        std::queue<int> q;
+
+        visitados[startNode] = true;
+        q.push(startNode);
+
+        while (!q.empty())
+        {
+            int nodoAtual = q.front();
+            q.pop();
+            cout << vertices[nodoAtual].label << "->";
+
+            for (int vizinho = 0; vizinho < numNodes; ++vizinho)
+            {
+                if (custos[nodoAtual][vizinho] != 0 && !visitados[vizinho])
+                {
+                    visitados[vizinho] = true;
+                    q.push(vizinho);
+                }
+            }
+        }
+    }
 
 public:
     Grafo(/* args */){};
@@ -196,7 +234,38 @@ public:
         geraMatrizCustos();
     }
 
-    int GoodMan(){
+    void depthFirstSearch(string label)
+    {
+        int index;
+        vector<bool> visitados(size(vertices), false);
+
+        for (int i = 0; i < size(vertices); i++)
+        {
+            if (label == vertices[i].label)
+            {
+                dfs(i, visitados);
+            }
+        }
+    };
+
+    void breadthFirstSearch()
+    {
+        string label;
+        cout << "Informe o vértice de origem: ";
+        cin >> label;
+        vector<bool> visitados(size(vertices), false);
+        for (int i = 0; i < size(vertices); i++)
+        {
+            if (label == vertices[i].label)
+            {
+                bfs(i, visitados);
+                return;
+            }
+        }
+    }
+
+    int GoodMan()
+    {
         return 0;
     }
 
@@ -251,14 +320,16 @@ public:
         return true;
     }
 
-    int compsConexos() {
+    int compsConexos()
+    {
         vector<int> listaComps(size(vertices));
 
         for (int i = 1; i < size(vertices); i++)
         {
             for (int j = 0; j < i; j++)
             {
-                if (custos[i][j] != 0) {
+                if (custos[i][j] != 0)
+                {
                     listaComps[i] = 1;
                     listaComps[j] = 1;
                 }
@@ -266,7 +337,8 @@ public:
         }
 
         int componentes = 1;
-        for (int i = 0; i < size(listaComps); i++) {
+        for (int i = 0; i < size(listaComps); i++)
+        {
             cout << listaComps[i] << " ";
             if (listaComps[i] == 0)
                 componentes++;
@@ -276,39 +348,12 @@ public:
     }
 };
 
-void dfs(int node, const std::vector<std::vector<int>>& graph, std::vector<bool>& visited) {
-    visited[node] = true;
-
-    for (int neighbor = 0; neighbor < graph.size(); ++neighbor) {
-        if (graph[node][neighbor] != 0 && !visited[neighbor]) {
-            dfs(neighbor, graph, visited);
-        }
-    }
-}
-
-int countConnectedComponents(const std::vector<std::vector<int>>& graph) {
-    int numNodes = graph.size();
-    std::vector<bool> visited(numNodes, false);
-    int numComponents = 0;
-
-    for (int node = 0; node < numNodes; ++node) {
-        if (!visited[node]) {
-            dfs(node, graph, visited);
-            ++numComponents;
-        }
-    }
-
-    return numComponents;
-}
-
-
 int main()
 {
     Grafo formiga("grafoIn.txt");
     int op;
     string label, A, B;
     bool isEuler;
-    
 
     while (1)
     {
@@ -355,17 +400,27 @@ int main()
             // cin >> label;
             formiga.SalvarGrafo("grafoOut.txt");
             break;
-        case 6: 
+        case 6:
             isEuler = formiga.IsEuleriano();
             if (isEuler)
                 cout << "O grafo é Euleriano!" << endl;
-            else 
+            else
                 cout << "O grafo NÃO é Euleriano!" << endl;
             break;
         case 7:
             cout << "Número de componentes conexos : " << formiga.compsConexos() << endl;
             break;
+
+        case 8:
+
+            cout << "Informe o vértice de origem: ";
+            cin >> label;
+            formiga.depthFirstSearch(label);
+            break;
         case 9:
+            formiga.breadthFirstSearch();
+            break;
+        case 10:
             formiga.PrintInfos();
             break;
         default:
