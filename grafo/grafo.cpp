@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <queue>
+#include <sstream>
 using namespace std;
 
 class Vertice
@@ -114,29 +115,47 @@ private:
                 }
             }
         }
+        cout << endl;
     }
 
 public:
-    Grafo(/* args */){};
+    Grafo(){};
     Grafo(string nameFile)
     {
         ifstream file(nameFile, ios::in);
-        int n;
-        file >> n;
-        string label;
-        float x, y;
+        string linhaN;
+        getline(file, linhaN);
+        int n = stoi(linhaN);
+
         for (int i = 0; i < n; i++)
         {
-            file >> label >> x >> y;
-            InserirVertice(x, y, label);
+            string linha, label, linhaX, linhaY;
+            float x, y;
+
+            getline(file, linha);
+            stringstream parser(linha);
+
+            getline(parser, label, ';');
+            getline(parser, linhaX, ';');
+            getline(parser, linhaY, ';');
+
+            InserirVertice(stoi(linhaX), stoi(linhaY), label);
         }
 
-        file >> n;
-        string v1, v2;
+        getline(file, linhaN);
+        n = stoi(linhaN);
         for (int i = 0; i < n; i++)
         {
-            file >> label >> v1 >> v2;
-            InserirAresta(label, v1, v2);
+            string linha, label, linhaV1, linhaV2;
+
+            getline(file, linha);
+            stringstream parser(linha);
+
+            getline(parser, label, ';');
+            getline(parser, linhaV1, ';');
+            getline(parser, linhaV2, ';');
+
+            InserirAresta(label, linhaV1, linhaV2);
         }
 
         file.close();
@@ -185,7 +204,8 @@ public:
         }
         if (A.label == "" || B.label == "")
         {
-            cout << "Vértices não encontrados";
+            cout << "Vértices não encontrados.\n";
+            return;
         }
 
         float custo = sqrt(pow(A.x - B.x, 2) + pow(A.y - B.y, 2));
@@ -193,11 +213,12 @@ public:
         Aresta novaAresta(custo, label, v1, v2);
         arestas.push_back(novaAresta);
         geraMatrizCustos();
+        cout << "Aresta inserida.\n";
     }
 
     void RemoverAresta(string label)
     {
-        int index;
+        int index = -1;
         for (int i = 0; i < size(arestas); i++)
         {
             if (arestas[i].label == label)
@@ -207,13 +228,19 @@ public:
             }
         }
 
+        if (index == -1) {
+            cout << "Aresta não encontrada.\n";
+            return;
+        }
+    
         arestas.erase(arestas.begin() + index);
         geraMatrizCustos();
+        cout << "Aresta '" << label << "' removida\n";
     }
 
     void RemoverVertice(string label)
     {
-        int index;
+        int index = -1;
         for (int i = 0; i < size(vertices); i++)
         {
             if (vertices[i].label == label)
@@ -221,6 +248,11 @@ public:
                 index = i;
                 break;
             }
+        }
+
+        if (index == -1) {
+            cout << "Vértice não encontrado.\n";
+            return;
         }
 
         vertices.erase(vertices.begin() + index);
@@ -232,11 +264,11 @@ public:
             }
         }
         geraMatrizCustos();
+        cout << "Vértice '" << label << "' removido\n";
     }
 
     void depthFirstSearch(string label)
     {
-        int index;
         vector<bool> visitados(size(vertices), false);
 
         for (int i = 0; i < size(vertices); i++)
@@ -244,15 +276,15 @@ public:
             if (label == vertices[i].label)
             {
                 dfs(i, visitados);
+                return;
             }
         }
+
+        cout << "Vértice não encontrado.\n";
     };
 
-    void breadthFirstSearch()
+    void breadthFirstSearch(string label)
     {
-        string label;
-        cout << "Informe o vértice de origem: ";
-        cin >> label;
         vector<bool> visitados(size(vertices), false);
         for (int i = 0; i < size(vertices); i++)
         {
@@ -262,6 +294,7 @@ public:
                 return;
             }
         }
+        cout << "Vértice não encontrado.\n";
     }
 
     int GoodMan()
@@ -283,16 +316,15 @@ public:
             cout << vertices[i].label << ": (" << vertices[i].x << ", " << vertices[i].y << ")\n";
         }
 
-        cout << "Matriz de custos" << endl
-             << "     ";
+        cout << "Matriz de custos" << endl << "     ";
         for (int i = 0; i < size(custos); i++)
         {
-            cout << " " << vertices[i].label;
+            cout << " '" << vertices[i].label << "'";
         }
         cout << endl;
         for (int i = 0; i < size(custos); i++)
         {
-            cout << vertices[i].label << " :";
+            cout << "'" << vertices[i].label << "' :";
             for (int j = 0; j < size(custos); j++)
             {
                 cout << fixed << setprecision(2) << custos[i][j] << " ";
@@ -319,33 +351,6 @@ public:
 
         return true;
     }
-
-    int compsConexos()
-    {
-        vector<int> listaComps(size(vertices));
-
-        for (int i = 1; i < size(vertices); i++)
-        {
-            for (int j = 0; j < i; j++)
-            {
-                if (custos[i][j] != 0)
-                {
-                    listaComps[i] = 1;
-                    listaComps[j] = 1;
-                }
-            }
-        }
-
-        int componentes = 1;
-        for (int i = 0; i < size(listaComps); i++)
-        {
-            cout << listaComps[i] << " ";
-            if (listaComps[i] == 0)
-                componentes++;
-        }
-
-        return componentes;
-    }
 };
 
 int main()
@@ -357,8 +362,9 @@ int main()
 
     while (1)
     {
-        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n 6 - Verifica Euleriano\n 7 - Componentes desconexos\n";
+        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n 6 - Verifica Euleriano\n 7 - Componentes desconexos\n 8 - Busca em profundidade\n 9 - Busca em largura\n";
         cin >> op;
+        cin.ignore();
         switch (op)
         {
         case 0:
@@ -367,32 +373,33 @@ int main()
         case 1:
             float x, y;
             cout << "Label: ";
-            cin >> label;
+            getline(cin, label);
             cout << "X: ";
             cin >> x;
             cout << "Y: ";
             cin >> y;
 
             formiga.InserirVertice(x, y, label);
+            cout << "Vértice inserido.\n";
             break;
         case 2:
             cout << "Label: ";
-            cin >> label;
+            getline(cin, label);
             cout << "Vertice A: ";
-            cin >> A;
+            getline(cin, A);
             cout << "Vertice B: ";
-            cin >> B;
+            getline(cin, B);
 
             formiga.InserirAresta(label, A, B);
             break;
         case 3:
-            cout << "Label: ";
-            cin >> label;
+            cout << "Vertice a ser removido: ";
+            getline(cin, label);
             formiga.RemoverVertice(label);
             break;
         case 4:
-            cout << "Label: ";
-            cin >> label;
+            cout << "Aresta a ser removida: ";
+            getline(cin, label);
             formiga.RemoverAresta(label);
             break;
         case 5:
@@ -408,17 +415,20 @@ int main()
                 cout << "O grafo NÃO é Euleriano!" << endl;
             break;
         case 7:
-            cout << "Número de componentes conexos : " << formiga.compsConexos() << endl;
+            cout << "Número de componentes conexos : " << endl;
             break;
 
         case 8:
 
             cout << "Informe o vértice de origem: ";
-            cin >> label;
+            getline(cin, label);
             formiga.depthFirstSearch(label);
             break;
         case 9:
-            formiga.breadthFirstSearch();
+
+            cout << "Informe o vértice de origem: ";
+            getline(cin, label);
+            formiga.breadthFirstSearch(label);
             break;
         case 10:
             formiga.PrintInfos();
