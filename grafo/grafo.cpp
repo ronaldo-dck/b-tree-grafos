@@ -521,9 +521,11 @@ public:
         {
             cout << vertices[i].label << ": (" << vertices[i].x << ", " << vertices[i].y << ")\n";
         }
+    }
 
-        cout << "Matriz de custos" << endl
-             << "     ";
+    void PrintCustos() 
+    {
+        cout << "Matriz de custos" << endl << "     ";
         for (int i = 0; i < size(custos); i++)
         {
             cout << " '" << vertices[i].label << "'";
@@ -599,6 +601,7 @@ int main()
 
     while (1)
     {
+        G.PrintInfos();
         cout << "Menu:\n"
              << " 0  - Sair\n"
              << " 1  - Inserir Vértice\n"
@@ -612,7 +615,7 @@ int main()
              << " 9  - Busca em largura\n"
              << " 10 - Dijkstra\n"
              << " 11 - Fleury\n"
-             << " 12 - Informações\n"
+             << " 12 - Matriz de custo\n"
              << "Operação desejada: ";
         cin >> op;
         cin.ignore();
@@ -635,7 +638,7 @@ int main()
 
             cout << "Vértice '" << label << "' inserido.\nPressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 2:
@@ -651,7 +654,7 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 3:
@@ -661,7 +664,7 @@ int main()
 
             cout << "Vértice removido.\nPressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 4:
@@ -671,7 +674,7 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 5:
@@ -681,7 +684,7 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 6:
@@ -693,14 +696,14 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
         case 7:
             cout << "Número de componentes conexos : " << G.GoodMan() << endl;
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 8:
@@ -710,7 +713,7 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 9:
@@ -720,7 +723,7 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 10:
@@ -728,7 +731,7 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 11:
@@ -736,12 +739,12 @@ int main()
 
             cout << "Pressione enter.";
             getline(cin, label);
-            system("cls");
+            system("clear");
             break;
 
         case 12:
-            system("cls");
-            G.PrintInfos();
+            system("clear");
+            G.PrintCustos();
             break;
 
         default:
