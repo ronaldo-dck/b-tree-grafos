@@ -309,16 +309,34 @@ public:
         cout << "Vértice de Destino: ";
         getline(cin, v2);
 
-        int i = 0, origin, destino;
-        while (v1 != vertices[i++].label)
+        // int i = 0, origin, destino;
+        // while (v1 != vertices[i++].label)
+        // {
+        // }
+        // origin = --i;
+        // i = 0;
+        // while (v2 != vertices[i++].label)
+        // {
+        // }
+        // destino = --i;
+
+        int origin = -1, destino = -1;
+        for (int i = 0; i < size(vertices); i++)
         {
+            if (v1 == vertices[i].label)
+            {
+                origin = i;
+            }
+            else if (v2 == vertices[i].label)
+            {
+                destino = i;
+            }
         }
-        origin = --i;
-        i = 0;
-        while (v2 != vertices[i++].label)
+        if ( origin == -1 || destino == -1)
         {
+            cout << "Vértices não encontrados.\n";
+            return;
         }
-        destino = --i;
 
         vector<int> caminho = __dijkstra(custos, origin, destino);
 
@@ -355,7 +373,7 @@ public:
         geraMatrizCustos();
     };
 
-    void InserirAresta(string label, string v1, string v2)
+    bool InserirAresta(string label, string v1, string v2)
     {
 
         Vertice A, B;
@@ -374,7 +392,7 @@ public:
         if (A.label == "" || B.label == "")
         {
             cout << "Vértices não encontrados.\n";
-            return;
+            return false;
         }
 
         float custo = sqrt(pow(A.x - B.x, 2) + pow(A.y - B.y, 2));
@@ -382,7 +400,7 @@ public:
         Aresta novaAresta(custo, label, v1, v2);
         arestas.push_back(novaAresta);
         geraMatrizCustos();
-        // cout << "Aresta inserida.\n";
+        return true;
     }
 
     void RemoverAresta(string label)
@@ -552,7 +570,7 @@ public:
 
         string label;
         cout << "Vértice de Inicio: ";
-        cin >> label;
+        getline(cin, label);
 
         int origin = 0;
         while (label != vertices[origin].label)
@@ -581,18 +599,21 @@ int main()
 
     while (1)
     {
-        cout << " 0 - Sair\n"
-             << " 1 - Inserir Vértice\n"
-             << " 2 - Inserir Aresta\n"
-             << " 3 - Remover Vértice\n"
-             << " 4 - Remover Aresta\n"
-             << " 5 - Salvar em arquivo\n"
-             << " 6 - Verifica Euleriano\n"
-             << " 7 - Componentes conexos\n"
-             << " 8 - Busca em profundidade\n"
-             << " 9 - Busca em largura\n"
+        cout << "Menu:\n"
+             << " 0  - Sair\n"
+             << " 1  - Inserir Vértice\n"
+             << " 2  - Inserir Aresta\n"
+             << " 3  - Remover Vértice\n"
+             << " 4  - Remover Aresta\n"
+             << " 5  - Salvar em arquivo\n"
+             << " 6  - Verifica Euleriano\n"
+             << " 7  - Componentes conexos\n"
+             << " 8  - Busca em profundidade\n"
+             << " 9  - Busca em largura\n"
              << " 10 - Dijkstra\n"
-             << " 11 - Fleury\n";
+             << " 11 - Fleury\n"
+             << " 12 - Informações\n"
+             << "Operação desejada: ";
         cin >> op;
         cin.ignore();
         switch (op)
@@ -608,10 +629,15 @@ int main()
             cin >> x;
             cout << "Y: ";
             cin >> y;
+            cin.ignore();
 
             G.InserirVertice(x, y, label);
-            cout << "Vértice inserido.\n";
+
+            cout << "Vértice '" << label << "' inserido.\nPressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 2:
             cout << "Label: ";
             getline(cin, label);
@@ -620,55 +646,104 @@ int main()
             cout << "Vertice B: ";
             getline(cin, B);
 
-            G.InserirAresta(label, A, B);
+            if (G.InserirAresta(label, A, B)) 
+                cout << "Aresta '" << label << "' inserida.\n";
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 3:
             cout << "Vertice a ser removido: ";
             getline(cin, label);
             G.RemoverVertice(label);
+
+            cout << "Vértice removido.\nPressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 4:
             cout << "Aresta a ser removida: ";
             getline(cin, label);
             G.RemoverAresta(label);
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 5:
             cout << "Nome do arquivo de saída: ";
             getline(cin, label);
             G.SalvarGrafo(label);
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 6:
             isEuler = G.IsEuleriano();
             if (isEuler)
                 cout << "O grafo é Euleriano!" << endl;
             else
                 cout << "O grafo NÃO é Euleriano!" << endl;
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
         case 7:
             cout << "Número de componentes conexos : " << G.GoodMan() << endl;
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
 
         case 8:
-
             cout << "Informe o vértice de origem: ";
             getline(cin, label);
             G.depthFirstSearch(label);
-            break;
-        case 9:
 
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
+            break;
+
+        case 9:
             cout << "Informe o vértice de origem: ";
             getline(cin, label);
             G.breadthFirstSearch(label);
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 10:
             G.Dijkstra();
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 11:
             G.FleuryCiclo();
+
+            cout << "Pressione enter.";
+            getline(cin, label);
+            system("cls");
             break;
+
         case 12:
+            system("cls");
             G.PrintInfos();
             break;
+
         default:
             break;
         }
