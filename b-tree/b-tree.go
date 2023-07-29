@@ -290,7 +290,7 @@ func (nodo *BTreeNode) PercursoEmOrdem(listaIndex *[]int) {
 		if nodo.leaf == false {
 			nodo.children[i].PercursoEmOrdem(listaIndex)
 		}
-		fmt.Printf("%s %d\n", nodo.keys[i].nome, nodo.keys[i].index)
+		// fmt.Printf("%s %d\n", nodo.keys[i].nome, nodo.keys[i].index)
 		*listaIndex = append(*listaIndex, nodo.keys[i].index)
 	}
 
@@ -412,13 +412,15 @@ func listarContatos(tree *BTree, lixeira bool) {
 
 	agenda := loadData()
 
+	fmt.Println("\nNome | Endereço | Telefone:")
 	for _, v := range lista {
 		if lixeira == true && agenda[v].Apagado == true {
-			fmt.Println(agenda[v])
-		} else if lixeira == false && agenda[v].Apagado == false {
-			fmt.Println(agenda[v])
+			fmt.Printf("%s | %s | %s\n", agenda[v].Nome, agenda[v].Endereco, agenda[v].Telefone)
+			} else if lixeira == false && agenda[v].Apagado == false {
+			fmt.Printf("%s | %s | %s\n", agenda[v].Nome, agenda[v].Endereco, agenda[v].Telefone)
 		}
 	}
+	fmt.Println()
 }
 
 func loadData() []Contato {
@@ -530,7 +532,6 @@ func esvaziarLixeira(tree *BTree) {
 	listaIndex := loadIndex()
 	newAgenda := make([]Contato, 0)
 	newIndex := make([]DataType, 0)
-	fmt.Println(listaIndex)
 
 	for i := range listaIndex {
 		achou := false
@@ -546,20 +547,40 @@ func esvaziarLixeira(tree *BTree) {
 		}
 	}
 
-	tree.root.Print("", true)
-	fmt.Println(newIndex)
-	fmt.Printf("atualizando index:\n")
 	for i, v := range newIndex {
-		fmt.Printf("buscando por: %v\n", v.nome)
 		newIndex[i].index = i
-		nodo, err := tree.Search(v.nome)
-		println(nodo.nome, nodo.index, err)
+		nodo, _ := tree.Search(v.nome)
 		nodo.index = i
 	}
 
 	saveData(newAgenda)
 	saveIndex(newIndex)
 
+}
+
+func editarContato(tree *BTree) *BTree {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Printf("Nome: ")
+	scanner.Scan()
+	nodo, _ := tree.Search(scanner.Text())
+
+	novosDados := setDados()
+	listaDados := loadData()
+	listaDados[nodo.index] = novosDados
+	saveData(listaDados)
+
+	if novosDados.Nome == nodo.nome {
+		return tree
+	}
+
+	novoNodo := DataType{nome: novosDados.Nome, index: nodo.index}
+	listaIndex := loadIndex()
+	listaIndex[novoNodo.index] = novoNodo
+	saveIndex(listaIndex)
+
+	newTree := Init()
+	initTreeFromFile("indexFile.txt", newTree)
+	return newTree
 }
 
 func main() {
@@ -595,18 +616,27 @@ func main() {
 		fmt.Println("3 - Enviar para lixeira")
 		fmt.Println("4 - Restaurar da lixeira")
 		fmt.Println("5 - Esvaziar lixeira")
+		fmt.Println("6 - Editar contato")
 
-		fmt.Scan(&op)
+		// fmt.Scan(&op)
+		fmt.Scanf("%d\n", &op)
 		switch op {
 		case 0:
 			return
 		case 1:
+			listaIndex := loadIndex()
+			listaData := loadData()
+
 			contato := setDados()
-			// appendDados(contato, dataFile)
+			listaData = append(listaData, contato)
+
 			nodo := DataType{contato.Nome, indexAtual}
+			listaIndex = append(listaIndex, nodo)
 			tree.Insert(nodo)
-			// appendIndex(nodo, indexFile)
+
 			indexAtual++
+			saveIndex(listaIndex)
+			saveData(listaData)
 		case 2:
 			listarContatos(tree, false)
 		case 3:
@@ -618,6 +648,8 @@ func main() {
 			restaurarDaLixeira(tree)
 		case 5:
 			esvaziarLixeira(tree)
+		case 6:
+			tree = editarContato(tree)
 		case 9:
 			tree.root.Print("", true)
 		}
