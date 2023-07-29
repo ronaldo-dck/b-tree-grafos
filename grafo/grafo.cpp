@@ -7,7 +7,10 @@
 #include <cmath>
 #include <queue>
 #include <sstream>
+#include <limits>
 using namespace std;
+
+const int INF = numeric_limits<int>::max();
 
 class Vertice
 {
@@ -27,6 +30,7 @@ public:
         this->y = y;
         this->label = label;
     }
+    Vertice(const Vertice &other) : x(other.x), y(other.y), label(other.label) {}
 };
 
 class Aresta
@@ -35,12 +39,64 @@ public:
     float custo;
     string label;
     string v1, v2;
+    Aresta() {}
     Aresta(float custo, string label, string v1, string v2)
     {
         this->custo = custo;
         this->label = label;
         this->v1 = v1;
         this->v2 = v2;
+    }
+
+    Aresta(const Aresta &other)
+        : custo(other.custo), label(other.label), v1(other.v1), v2(other.v2) {}
+};
+
+class Fleury
+{
+private:
+    int numVertices;
+    vector<vector<float>> grafo;
+    vector<bool> arestasVisitadas;
+
+    bool isValidNextEdge(int u, int v)
+    {
+        // Verifica se a aresta (u, v) existe e não foi visitada
+        return grafo[u][v] != 0.0 && !arestasVisitadas[grafo[u][v]];
+    }
+
+    void dfs(int u, vector<int> &ciclo)
+    {
+        for (int v = 0; v < numVertices; v++)
+        {
+            if (isValidNextEdge(u, v))
+            {
+                arestasVisitadas[grafo[u][v]] = true;
+                dfs(v, ciclo);
+            }
+        }
+
+        ciclo.push_back(u);
+    }
+
+public:
+    Fleury(const vector<vector<float>> &matrizCustos)
+    {
+        numVertices = matrizCustos.size();
+        grafo = matrizCustos;
+        arestasVisitadas.assign(numVertices, false);
+    }
+
+    vector<int> CicloEuleriano(int verticeInicial = 0)
+    {
+        vector<int> ciclo;
+
+        dfs(verticeInicial, ciclo);
+
+        // Reverter o ciclo encontrado, pois a função dfs insere os vértices em ordem inversa
+        reverse(ciclo.begin(), ciclo.end());
+
+        return ciclo;
     }
 };
 
@@ -78,16 +134,20 @@ private:
         custos = aux;
     }
 
-    void dfs(int node, vector<bool> &visitados)
+    void dfs(int node, vector<bool> &visitados, bool logico)
     {
         visitados[node] = true;
-        cout << vertices[node].label << "->";
+        if (!logico)
+            cout << vertices[node].label;
 
         for (int vizinho = 0; vizinho < size(custos); ++vizinho)
         {
             if (custos[node][vizinho] != 0 && !visitados[vizinho])
             {
-                dfs(vizinho, visitados);
+                if (!logico)
+                    cout << "->";
+
+                dfs(vizinho, visitados, logico);
             }
         }
     }
@@ -95,7 +155,7 @@ private:
     void bfs(int startNode, vector<bool> &visitados)
     {
         int numNodes = size(vertices);
-        std::queue<int> q;
+        queue<int> q;
 
         visitados[startNode] = true;
         q.push(startNode);
@@ -115,7 +175,45 @@ private:
                 }
             }
         }
-        cout << endl;
+    }
+
+    vector<int> __dijkstra(const vector<vector<float>> &grafo, int origem, int destino)
+    {
+        int numVertices = grafo.size();
+        vector<float> distancias(numVertices, INF);
+        vector<int> caminhoAnterior(numVertices, -1);
+        distancias[origem] = 0;
+
+        queue<int> fila;
+        fila.push(origem);
+
+        while (!fila.empty())
+        {
+            int u = fila.front();
+            fila.pop();
+
+            for (int v = 0; v < numVertices; v++)
+            {
+                if (grafo[u][v] != 0.0 && distancias[u] + grafo[u][v] < distancias[v])
+                {
+                    distancias[v] = distancias[u] + grafo[u][v];
+                    caminhoAnterior[v] = u;
+                    fila.push(v);
+                }
+            }
+        }
+
+        vector<int> caminho;
+        int atual = destino;
+        while (atual != origem && atual != -1)
+        {
+            caminho.push_back(atual);
+            atual = caminhoAnterior[atual];
+        }
+        caminho.push_back(origem);
+        reverse(caminho.begin(), caminho.end());
+
+        return caminho;
     }
 
 public:
@@ -160,6 +258,62 @@ public:
 
         file.close();
     };
+
+    // Construtor de cópia
+    Grafo(const Grafo &other)
+    {
+        // Copiar os vértices
+        for (const Vertice &v : other.vertices)
+        {
+            vertices.push_back(v); // Supondo que a classe Vertice possui um construtor de cópia apropriado
+        }
+
+        // Copiar as arestas
+        for (const Aresta &a : other.arestas)
+        {
+            arestas.push_back(a); // Supondo que a classe Aresta possui um construtor de cópia apropriado
+        }
+
+        // Copiar a matriz de custos
+        int n = other.custos.size();
+        custos.resize(n, vector<float>(n, 0.0f)); // Redimensiona a matriz de custos
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = 0; j < n; ++j)
+            {
+                custos[i][j] = other.custos[i][j];
+            }
+        }
+    }
+
+    void Dijkstra()
+    {
+        string v1, v2;
+        cout << "Vértice de Origen: ";
+        getline(cin, v1);
+        cout << "Vértice de Destino: ";
+        getline(cin, v2);
+
+        int i = 0, origin, destino;
+        while (v1 != vertices[i++].label)
+        {
+        }
+        origin = --i;
+        i = 0;
+        while (v2 != vertices[i++].label)
+        {
+        }
+        destino = --i;
+
+        vector<int> caminho = __dijkstra(custos, origin, destino);
+
+        cout << vertices[caminho[0]].label;
+        for (int i = 1; i < size(caminho); i++)
+        {
+            cout << "->" << vertices[caminho[i]].label;
+        }
+        cout << endl;
+    }
 
     void SalvarGrafo(string nameFile)
     {
@@ -213,7 +367,7 @@ public:
         Aresta novaAresta(custo, label, v1, v2);
         arestas.push_back(novaAresta);
         geraMatrizCustos();
-        cout << "Aresta inserida.\n";
+        // cout << "Aresta inserida.\n";
     }
 
     void RemoverAresta(string label)
@@ -228,11 +382,12 @@ public:
             }
         }
 
-        if (index == -1) {
+        if (index == -1)
+        {
             cout << "Aresta não encontrada.\n";
             return;
         }
-    
+
         arestas.erase(arestas.begin() + index);
         geraMatrizCustos();
         cout << "Aresta '" << label << "' removida\n";
@@ -250,19 +405,23 @@ public:
             }
         }
 
-        if (index == -1) {
+        if (index == -1)
+        {
             cout << "Vértice não encontrado.\n";
             return;
         }
 
         vertices.erase(vertices.begin() + index);
+
+        vector<Aresta> tempAresta;
         for (int i = 0; i < size(arestas); i++)
         {
-            if (arestas[i].v1 == label || arestas[i].v2 == label)
+            if (arestas[i].v1 != label && arestas[i].v2 != label)
             {
-                arestas.erase(arestas.begin() + i);
+                tempAresta.push_back(arestas[i]);
             }
         }
+        arestas = tempAresta;
         geraMatrizCustos();
         cout << "Vértice '" << label << "' removido\n";
     }
@@ -275,7 +434,8 @@ public:
         {
             if (label == vertices[i].label)
             {
-                dfs(i, visitados);
+                dfs(i, visitados, false);
+                cout << endl;
                 return;
             }
         }
@@ -291,6 +451,7 @@ public:
             if (label == vertices[i].label)
             {
                 bfs(i, visitados);
+                cout << endl;
                 return;
             }
         }
@@ -299,7 +460,19 @@ public:
 
     int GoodMan()
     {
-        return 0;
+        vector<bool> visitados(size(vertices), false);
+        int componentes = 0;
+
+        for (int i = 0; i < size(vertices); i++)
+        {
+            if (!visitados[i])
+            {
+                dfs(i, visitados, true);
+                componentes++;
+            }
+        }
+
+        return componentes;
     }
 
     void PrintInfos()
@@ -316,7 +489,8 @@ public:
             cout << vertices[i].label << ": (" << vertices[i].x << ", " << vertices[i].y << ")\n";
         }
 
-        cout << "Matriz de custos" << endl << "     ";
+        cout << "Matriz de custos" << endl
+             << "     ";
         for (int i = 0; i < size(custos); i++)
         {
             cout << " '" << vertices[i].label << "'";
@@ -351,18 +525,59 @@ public:
 
         return true;
     }
+
+    void FleuryCiclo()
+    {
+        Fleury ciclo(custos);
+
+        string label;
+        cin >> label;
+
+        int origin = 0;
+        while (label != vertices[origin].label)
+        {
+            origin++;
+        }
+
+        vector<int> cicloEuler = ciclo.CicloEuleriano(origin);
+
+        cout << vertices[cicloEuler[0]].label;
+        for (int i = 1; i < size(cicloEuler); i++)
+        {
+            cout << "->" << vertices[cicloEuler[i]].label;
+        }
+        cout << endl;
+    }
+
 };
+
+//    função Fleury(G = (V,E): grafo) : caminho
+//        G' := G     { G' = (V', E')}
+//        v0 := um vértice de G'
+//        C := [v0] {Inicialmente, o circuito contém só v0}
+//        Enquanto E' não vazio
+//            vi := último vértice de C
+//            Se vi tem só uma aresta incidente;
+//                ai := a aresta incidente a vi em G'
+//            Senão
+//                ai := uma aresta incidente a vi em G' e que não é uma ponte
+//            Retirar a aresta ai do grafo G'
+//            Acrescentar ai no final de C
+//            vj := vértice ligado a vi por ai
+//            Acrescentar vj no final de C
+//        Retornar C
 
 int main()
 {
     Grafo formiga("grafoIn.txt");
+    // Grafo formiga;
     int op;
     string label, A, B;
     bool isEuler;
 
     while (1)
     {
-        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n 6 - Verifica Euleriano\n 7 - Componentes desconexos\n 8 - Busca em profundidade\n 9 - Busca em largura\n";
+        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n 6 - Verifica Euleriano\n 7 - Componentes conexos\n 8 - Busca em profundidade\n 9 - Busca em largura\n 10 - Dijkstra\n 11 - Fleury\n";
         cin >> op;
         cin.ignore();
         switch (op)
@@ -415,7 +630,7 @@ int main()
                 cout << "O grafo NÃO é Euleriano!" << endl;
             break;
         case 7:
-            cout << "Número de componentes conexos : " << endl;
+            cout << "Número de componentes conexos : " << formiga.GoodMan() << endl;
             break;
 
         case 8:
@@ -431,6 +646,12 @@ int main()
             formiga.breadthFirstSearch(label);
             break;
         case 10:
+            formiga.Dijkstra();
+            break;
+        case 11:
+            formiga.FleuryCiclo();
+            break;
+        case 12:
             formiga.PrintInfos();
             break;
         default:
