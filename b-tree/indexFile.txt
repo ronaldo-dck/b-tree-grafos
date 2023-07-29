@@ -1,3 +1,5 @@
 0;hum
 1;hum3
 2;nome1
+3;nomelimitado
+4;sator

@@ -302,23 +302,34 @@ func (nodo *BTreeNode) PercursoEmOrdem(listaIndex *[]int) {
 
 ///////////////////////////////
 
+func limString(scanner *bufio.Scanner, info string, limite int) string {
+
+	var res string
+
+	fmt.Print(info)
+	scanner.Scan()
+	res = scanner.Text()
+	for res == "" || len(res) > limite {
+		fmt.Printf("Dados inválidos, insira novamente\n")
+		fmt.Print(info)
+		scanner.Scan()
+		res = scanner.Text()
+	}
+
+	return res
+
+}
+
 func setDados() Contato {
 
+	fmt.Printf("Dados para o contato:\n")
 	var contato Contato
 
 	scanner := bufio.NewScanner(os.Stdin)
 
-	fmt.Printf("Nome: ")
-	scanner.Scan()
-	contato.Nome = scanner.Text()
-
-	fmt.Printf("Endereço: ")
-	scanner.Scan()
-	contato.Endereco = scanner.Text()
-
-	fmt.Printf("Telefone: ")
-	scanner.Scan()
-	contato.Telefone = scanner.Text()
+	contato.Nome = limString(scanner, "Nome: ", 30)
+	contato.Endereco = limString(scanner, "Endereço: ", 50)
+	contato.Telefone = limString(scanner, "Telefone: ", 15)
 
 	contato.Apagado = false
 
@@ -416,7 +427,7 @@ func listarContatos(tree *BTree, lixeira bool) {
 	for _, v := range lista {
 		if lixeira == true && agenda[v].Apagado == true {
 			fmt.Printf("%s | %s | %s\n", agenda[v].Nome, agenda[v].Endereco, agenda[v].Telefone)
-			} else if lixeira == false && agenda[v].Apagado == false {
+		} else if lixeira == false && agenda[v].Apagado == false {
 			fmt.Printf("%s | %s | %s\n", agenda[v].Nome, agenda[v].Endereco, agenda[v].Telefone)
 		}
 	}
@@ -497,7 +508,7 @@ func enviarParaLixeira(nome string, tree *BTree) {
 func restaurarDaLixeira(tree *BTree) {
 	listarContatos(tree, true)
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Printf("Nome: ")
+	fmt.Printf("Nome para restaurar da lixeira: ")
 	scanner.Scan()
 
 	contato, err := tree.Search(scanner.Text())
@@ -592,23 +603,6 @@ func main() {
 	tree = Init()
 	indexAtual = initTreeFromFile("indexFile.txt", tree)
 
-	// indexFile, err := os.OpenFile("indexFile.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	// if err != nil {
-	// 	fmt.Println("Erro ao abrir ou criar o arquivo:", err)
-	// 	return
-	// }
-	// defer indexFile.Close()
-
-	// dataFile, err := os.OpenFile("dataFile.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	// if err != nil {
-	// 	fmt.Println("Erro ao abrir ou criar o arquivo:", err)
-	// 	return
-	// }
-	// defer dataFile.Close()
-
-	println(indexAtual)
-	tree.root.Print("", true)
-
 	for {
 		fmt.Println("0 - Sair")
 		fmt.Println("1 - Inserir Contato")
@@ -618,7 +612,6 @@ func main() {
 		fmt.Println("5 - Esvaziar lixeira")
 		fmt.Println("6 - Editar contato")
 
-		// fmt.Scan(&op)
 		fmt.Scanf("%d\n", &op)
 		switch op {
 		case 0:
@@ -641,7 +634,7 @@ func main() {
 			listarContatos(tree, false)
 		case 3:
 			scanner := bufio.NewScanner(os.Stdin)
-			fmt.Printf("Nome: ")
+			fmt.Printf("Nome a mandar para lixeira: ")
 			scanner.Scan()
 			enviarParaLixeira(scanner.Text(), tree)
 		case 4:
@@ -655,14 +648,5 @@ func main() {
 		}
 
 	}
-
-	/* // Inserção
-	// salval file;
-	//	constriu o dados Datatype
-
-	tree = Init()
-	// insere na arvore;
-
-	tree.root.Print("", true) */
 
 }

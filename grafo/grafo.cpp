@@ -55,48 +55,63 @@ public:
 class Fleury
 {
 private:
-    int numVertices;
     vector<vector<float>> grafo;
-    vector<bool> arestasVisitadas;
 
-    bool isValidNextEdge(int u, int v)
+    bool isPonte(int u, int v)
     {
-        // Verifica se a aresta (u, v) existe e não foi visitada
-        return grafo[u][v] != 0.0 && !arestasVisitadas[grafo[u][v]];
-    }
-
-    void dfs(int u, vector<int> &ciclo)
-    {
-        for (int v = 0; v < numVertices; v++)
+        int grau = 0;
+        for (int i = 0; i < grafo.size(); i++)
         {
-            if (isValidNextEdge(u, v))
+            if (grafo[v][i] != 0.0)
             {
-                arestasVisitadas[grafo[u][v]] = true;
-                dfs(v, ciclo);
+                grau++;
+                if (grau > 1)
+                {
+                    return false;
+                }
             }
         }
+        return true;
+    }
 
-        ciclo.push_back(u);
+    int countArestas()
+    {
+        int count = 0;
+        for (int i = 0; i < grafo.size(); i++)
+        {
+            for (int j = i; j < grafo.size(); j++)
+            {
+                if (grafo[i][j] != 0.0 || grafo[j][i] != 0.0)
+                {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
 public:
     Fleury(const vector<vector<float>> &matrizCustos)
     {
-        numVertices = matrizCustos.size();
         grafo = matrizCustos;
-        arestasVisitadas.assign(numVertices, false);
     }
 
-    vector<int> CicloEuleriano(int verticeInicial = 0)
+    void CicloEuleriano(int verticeInicial, vector<int> &ciclo)
     {
-        vector<int> ciclo;
-
-        dfs(verticeInicial, ciclo);
-
-        // Reverter o ciclo encontrado, pois a função dfs insere os vértices em ordem inversa
-        reverse(ciclo.begin(), ciclo.end());
-
-        return ciclo;
+        int numeroDeArestas = countArestas();
+        for (int i = 0; i < grafo.size(); i++)
+        {
+            if(grafo[verticeInicial][i] != 0.0){
+                if (numeroDeArestas <= 1 || !isPonte(verticeInicial, i))
+                {
+                    ciclo.push_back(i);
+                    grafo[verticeInicial][i]  = 0.0;
+                    grafo[i][verticeInicial]  = 0.0;
+                    numeroDeArestas--;
+                    CicloEuleriano(i, ciclo);
+                }
+            }
+        }
     }
 };
 
@@ -539,33 +554,17 @@ public:
             origin++;
         }
 
-        vector<int> cicloEuler = ciclo.CicloEuleriano(origin);
-
-        cout << vertices[cicloEuler[0]].label;
-        for (int i = 1; i < size(cicloEuler); i++)
+        vector<int> cicloEuler;
+        ciclo.CicloEuleriano(origin, cicloEuler);
+        
+        cout << vertices[origin].label;
+        for (int i = 0; i < size(cicloEuler); i++)
         {
             cout << "->" << vertices[cicloEuler[i]].label;
         }
         cout << endl;
     }
-
 };
-
-//    função Fleury(G = (V,E): grafo) : caminho
-//        G' := G     { G' = (V', E')}
-//        v0 := um vértice de G'
-//        C := [v0] {Inicialmente, o circuito contém só v0}
-//        Enquanto E' não vazio
-//            vi := último vértice de C
-//            Se vi tem só uma aresta incidente;
-//                ai := a aresta incidente a vi em G'
-//            Senão
-//                ai := uma aresta incidente a vi em G' e que não é uma ponte
-//            Retirar a aresta ai do grafo G'
-//            Acrescentar ai no final de C
-//            vj := vértice ligado a vi por ai
-//            Acrescentar vj no final de C
-//        Retornar C
 
 int main()
 {
