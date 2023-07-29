@@ -1,5 +1,4 @@
 #include <iostream>
-#include <list>
 #include <vector>
 #include <iomanip>
 #include <fstream>
@@ -101,12 +100,13 @@ public:
         int numeroDeArestas = countArestas();
         for (int i = 0; i < grafo.size(); i++)
         {
-            if(grafo[verticeInicial][i] != 0.0){
+            if (grafo[verticeInicial][i] != 0.0)
+            {
                 if (numeroDeArestas <= 1 || !isPonte(verticeInicial, i))
                 {
                     ciclo.push_back(i);
-                    grafo[verticeInicial][i]  = 0.0;
-                    grafo[i][verticeInicial]  = 0.0;
+                    grafo[verticeInicial][i] = 0.0;
+                    grafo[i][verticeInicial] = 0.0;
                     numeroDeArestas--;
                     CicloEuleriano(i, ciclo);
                 }
@@ -543,9 +543,15 @@ public:
 
     void FleuryCiclo()
     {
+        if (!this->IsEuleriano())
+        {
+            cout << "O grafo não é euleriano.\n";
+            return;
+        }
         Fleury ciclo(custos);
 
         string label;
+        cout << "Vértice de Inicio: ";
         cin >> label;
 
         int origin = 0;
@@ -556,7 +562,7 @@ public:
 
         vector<int> cicloEuler;
         ciclo.CicloEuleriano(origin, cicloEuler);
-        
+
         cout << vertices[origin].label;
         for (int i = 0; i < size(cicloEuler); i++)
         {
@@ -568,15 +574,25 @@ public:
 
 int main()
 {
-    Grafo formiga("grafoIn.txt");
-    // Grafo formiga;
+    Grafo G("grafoIn.txt");
     int op;
     string label, A, B;
     bool isEuler;
 
     while (1)
     {
-        cout << " 0 - Sair\n 1 - Inserir Vértice\n 2 - Inserir Aresta\n 3 - Remover Vértice\n 4 - Remover Aresta\n 5 - Salvar em arquivo\n 6 - Verifica Euleriano\n 7 - Componentes conexos\n 8 - Busca em profundidade\n 9 - Busca em largura\n 10 - Dijkstra\n 11 - Fleury\n";
+        cout << " 0 - Sair\n"
+             << " 1 - Inserir Vértice\n"
+             << " 2 - Inserir Aresta\n"
+             << " 3 - Remover Vértice\n"
+             << " 4 - Remover Aresta\n"
+             << " 5 - Salvar em arquivo\n"
+             << " 6 - Verifica Euleriano\n"
+             << " 7 - Componentes conexos\n"
+             << " 8 - Busca em profundidade\n"
+             << " 9 - Busca em largura\n"
+             << " 10 - Dijkstra\n"
+             << " 11 - Fleury\n";
         cin >> op;
         cin.ignore();
         switch (op)
@@ -593,7 +609,7 @@ int main()
             cout << "Y: ";
             cin >> y;
 
-            formiga.InserirVertice(x, y, label);
+            G.InserirVertice(x, y, label);
             cout << "Vértice inserido.\n";
             break;
         case 2:
@@ -604,54 +620,54 @@ int main()
             cout << "Vertice B: ";
             getline(cin, B);
 
-            formiga.InserirAresta(label, A, B);
+            G.InserirAresta(label, A, B);
             break;
         case 3:
             cout << "Vertice a ser removido: ";
             getline(cin, label);
-            formiga.RemoverVertice(label);
+            G.RemoverVertice(label);
             break;
         case 4:
             cout << "Aresta a ser removida: ";
             getline(cin, label);
-            formiga.RemoverAresta(label);
+            G.RemoverAresta(label);
             break;
         case 5:
-            // cout << "Nome do arquivo: ";
-            // cin >> label;
-            formiga.SalvarGrafo("grafoOut.txt");
+            cout << "Nome do arquivo de saída: ";
+            getline(cin, label);
+            G.SalvarGrafo(label);
             break;
         case 6:
-            isEuler = formiga.IsEuleriano();
+            isEuler = G.IsEuleriano();
             if (isEuler)
                 cout << "O grafo é Euleriano!" << endl;
             else
                 cout << "O grafo NÃO é Euleriano!" << endl;
             break;
         case 7:
-            cout << "Número de componentes conexos : " << formiga.GoodMan() << endl;
+            cout << "Número de componentes conexos : " << G.GoodMan() << endl;
             break;
 
         case 8:
 
             cout << "Informe o vértice de origem: ";
             getline(cin, label);
-            formiga.depthFirstSearch(label);
+            G.depthFirstSearch(label);
             break;
         case 9:
 
             cout << "Informe o vértice de origem: ";
             getline(cin, label);
-            formiga.breadthFirstSearch(label);
+            G.breadthFirstSearch(label);
             break;
         case 10:
-            formiga.Dijkstra();
+            G.Dijkstra();
             break;
         case 11:
-            formiga.FleuryCiclo();
+            G.FleuryCiclo();
             break;
         case 12:
-            formiga.PrintInfos();
+            G.PrintInfos();
             break;
         default:
             break;
