@@ -179,7 +179,6 @@ private:
         {
             int nodoAtual = q.front();
             q.pop();
-            cout << vertices[nodoAtual].label << "->";
 
             for (int vizinho = 0; vizinho < numNodes; ++vizinho)
             {
@@ -189,6 +188,12 @@ private:
                     q.push(vizinho);
                 }
             }
+
+            if (q.size())
+                cout << vertices[nodoAtual].label << "->";
+            else
+                cout << vertices[nodoAtual].label;
+            
         }
     }
 
