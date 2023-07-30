@@ -495,17 +495,19 @@ func enviarParaLixeira(nome string, tree *BTree) {
 		fmt.Println("Contato não encontrado")
 		return
 	}
-
+	
 	agenda := loadData()
-
+	
 	aux := agenda[contato.index]
 	aux.Apagado = true
 	agenda[contato.index] = aux
-
+	
 	saveData(agenda)
+	fmt.Println("Contato enviado para lixeira")
 }
 
 func restaurarDaLixeira(tree *BTree) {
+	fmt.Printf("Lista de contatos na lixeira:\n")
 	listarContatos(tree, true)
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Printf("Nome para restaurar da lixeira: ")
@@ -524,6 +526,7 @@ func restaurarDaLixeira(tree *BTree) {
 	agenda[contato.index] = aux
 
 	saveData(agenda)
+	fmt.Println("Contato restaurado da lixeira.")
 }
 
 func esvaziarLixeira(tree *BTree) {
@@ -571,9 +574,14 @@ func esvaziarLixeira(tree *BTree) {
 
 func editarContato(tree *BTree) *BTree {
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Printf("Nome: ")
+	fmt.Printf("Nome do contato a ser editado: ")
 	scanner.Scan()
-	nodo, _ := tree.Search(scanner.Text())
+	nodo, err := tree.Search(scanner.Text())
+
+	if err == -1 {
+		fmt.Println("Contato não encontrado")
+		return tree
+	}
 
 	novosDados := setDados()
 	listaDados := loadData()
@@ -591,7 +599,13 @@ func editarContato(tree *BTree) *BTree {
 
 	newTree := Init()
 	initTreeFromFile("indexFile.txt", newTree)
+
+	fmt.Println("Contato editado.")
 	return newTree
+}
+
+func Clear() {
+	fmt.Print("\033[H\033[2J") // escape codes para limpar a tela (Unix)
 }
 
 func main() {
@@ -604,14 +618,16 @@ func main() {
 	indexAtual = initTreeFromFile("indexFile.txt", tree)
 
 	for {
-		fmt.Println("0 - Sair")
-		fmt.Println("1 - Inserir Contato")
-		fmt.Println("2 - Listar Contatos")
-		fmt.Println("3 - Enviar para lixeira")
-		fmt.Println("4 - Restaurar da lixeira")
-		fmt.Println("5 - Esvaziar lixeira")
-		fmt.Println("6 - Editar contato")
+		fmt.Println("Menu:")
+		fmt.Println(" 0 - Sair")
+		fmt.Println(" 1 - Inserir Contato")
+		fmt.Println(" 2 - Listar Contatos")
+		fmt.Println(" 3 - Enviar para lixeira")
+		fmt.Println(" 4 - Restaurar da lixeira")
+		fmt.Println(" 5 - Esvaziar lixeira")
+		fmt.Println(" 6 - Editar contato")
 
+		fmt.Print("Operação desejada: ")
 		fmt.Scanf("%d\n", &op)
 		switch op {
 		case 0:
@@ -630,17 +646,39 @@ func main() {
 			indexAtual++
 			saveIndex(listaIndex)
 			saveData(listaData)
+			fmt.Printf("Contato inserido.\nPressione enter")
+			fmt.Scanln()
+			Clear()
 		case 2:
+			Clear()
 			listarContatos(tree, false)
 		case 3:
 			scanner := bufio.NewScanner(os.Stdin)
 			fmt.Printf("Nome a mandar para lixeira: ")
 			scanner.Scan()
 			enviarParaLixeira(scanner.Text(), tree)
+
+			fmt.Printf("Pressione enter")
+			fmt.Scanln()
+			Clear()
 		case 4:
 			restaurarDaLixeira(tree)
+			fmt.Printf("Pressione enter")
+			fmt.Scanln()
+			Clear()
 		case 5:
-			esvaziarLixeira(tree)
+			fmt.Printf("Todos os contatos na lixeira serão excluídos, deseja continuar? [s/N] ")
+			var confirma rune
+			fmt.Scanf("%c\n", &confirma)
+			if confirma == 's' {
+				esvaziarLixeira(tree)
+				fmt.Printf("Lixeira esvaziada.\nPressione enter")
+			} else {
+				fmt.Printf("Operação cancelada.\nPressione enter")
+			}
+			
+			fmt.Scanln()
+			Clear()
 		case 6:
 			tree = editarContato(tree)
 		case 9:
