@@ -314,17 +314,6 @@ public:
         cout << "Vértice de Destino: ";
         getline(cin, v2);
 
-        // int i = 0, origin, destino;
-        // while (v1 != vertices[i++].label)
-        // {
-        // }
-        // origin = --i;
-        // i = 0;
-        // while (v2 != vertices[i++].label)
-        // {
-        // }
-        // destino = --i;
-
         int origin = -1, destino = -1;
         for (int i = 0; i < size(vertices); i++)
         {
