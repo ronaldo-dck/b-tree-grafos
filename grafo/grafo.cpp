@@ -238,39 +238,42 @@ public:
         ifstream file(nameFile, ios::in);
         string linhaN;
         getline(file, linhaN);
-        int n = stoi(linhaN);
-
-        for (int i = 0; i < n; i++)
+        if (linhaN != "")
         {
-            string linha, label, linhaX, linhaY;
-            float x, y;
 
-            getline(file, linha);
-            stringstream parser(linha);
+            int n = stoi(linhaN);
 
-            getline(parser, label, ';');
-            getline(parser, linhaX, ';');
-            getline(parser, linhaY, ';');
+            for (int i = 0; i < n; i++)
+            {
+                string linha, label, linhaX, linhaY;
+                float x, y;
 
-            InserirVertice(stoi(linhaX), stoi(linhaY), label);
+                getline(file, linha);
+                stringstream parser(linha);
+
+                getline(parser, label, ';');
+                getline(parser, linhaX, ';');
+                getline(parser, linhaY, ';');
+
+                InserirVertice(stoi(linhaX), stoi(linhaY), label);
+            }
+
+            getline(file, linhaN);
+            n = stoi(linhaN);
+            for (int i = 0; i < n; i++)
+            {
+                string linha, label, linhaV1, linhaV2;
+
+                getline(file, linha);
+                stringstream parser(linha);
+
+                getline(parser, label, ';');
+                getline(parser, linhaV1, ';');
+                getline(parser, linhaV2, ';');
+
+                InserirAresta(label, linhaV1, linhaV2);
+            }
         }
-
-        getline(file, linhaN);
-        n = stoi(linhaN);
-        for (int i = 0; i < n; i++)
-        {
-            string linha, label, linhaV1, linhaV2;
-
-            getline(file, linha);
-            stringstream parser(linha);
-
-            getline(parser, label, ';');
-            getline(parser, linhaV1, ';');
-            getline(parser, linhaV2, ';');
-
-            InserirAresta(label, linhaV1, linhaV2);
-        }
-
         file.close();
     };
 
@@ -655,7 +658,6 @@ int main()
             G.depthFirstSearch(label);
             break;
         case 9:
-
             cout << "Informe o vértice de origem: ";
             getline(cin, label);
             G.breadthFirstSearch(label);
