@@ -66,30 +66,6 @@ func Init() *BTree {
 	}
 }
 
-/*********************************************************
- * Impressão da árvore B em forma de árvore de diretório *
- *********************************************************/
-func (node *BTreeNode) Print(indent string, last bool) {
-	fmt.Print(indent)
-	if last {
-		fmt.Print("└─ ")
-		indent += "    "
-	} else {
-		fmt.Print("├─ ")
-		indent += "|   "
-	}
-	keys := make([]string, len(node.keys))
-	fmt.Print("[")
-	for i, key := range node.keys {
-		keys[i] = fmt.Sprintf("%v", key)
-	}
-	fmt.Println(strings.Join(keys, "|"), "]")
-
-	childCount := len(node.children)
-	for i, child := range node.children {
-		child.Print(indent, i == childCount-1)
-	}
-}
 
 /*********************************************************
  * splitChild(i): implementa a Divisão de um filho cheio *
@@ -225,43 +201,43 @@ func (node *BTreeNode) Remove(key string) {
 			child := node.children[i]
 			if i > 0 && len(node.children[i-1].keys) >= t {
 				// Caso 3a(i): Se o irmão esquerdo do filho tiver pelo menos t chaves, emprestamos uma chave
-				leftSibling := node.children[i-1]
+				irmaoEsquerdo := node.children[i-1]
 				child.keys = append([]DataType{node.keys[i-1]}, child.keys...)
-				node.keys[i-1] = leftSibling.keys[len(leftSibling.keys)-1]
-				leftSibling.keys = leftSibling.keys[:len(leftSibling.keys)-1]
+				node.keys[i-1] = irmaoEsquerdo.keys[len(irmaoEsquerdo.keys)-1]
+				irmaoEsquerdo.keys = irmaoEsquerdo.keys[:len(irmaoEsquerdo.keys)-1]
 				if !child.leaf {
-					child.children = append([]*BTreeNode{leftSibling.children[len(leftSibling.children)-1]}, child.children...)
-					leftSibling.children = leftSibling.children[:len(leftSibling.children)-1]
+					child.children = append([]*BTreeNode{irmaoEsquerdo.children[len(irmaoEsquerdo.children)-1]}, child.children...)
+					irmaoEsquerdo.children = irmaoEsquerdo.children[:len(irmaoEsquerdo.children)-1]
 				}
 			} else if i < len(node.children)-1 && len(node.children[i+1].keys) >= t {
 				// Caso 3a(ii): Se o irmão direito do filho tiver pelo menos t chaves, emprestamos uma chave
-				rightSibling := node.children[i+1]
+				irmaoDireito := node.children[i+1]
 				child.keys = append(child.keys, node.keys[i])
-				node.keys[i] = rightSibling.keys[0]
-				rightSibling.keys = rightSibling.keys[1:]
+				node.keys[i] = irmaoDireito.keys[0]
+				irmaoDireito.keys = irmaoDireito.keys[1:]
 				if !child.leaf {
-					child.children = append(child.children, rightSibling.children[0])
-					rightSibling.children = rightSibling.children[1:]
+					child.children = append(child.children, irmaoDireito.children[0])
+					irmaoDireito.children = irmaoDireito.children[1:]
 				}
 			} else {
 				// Caso 3b: Fusão com irmão
 				if i > 0 {
 					// Fusão com o irmão esquerdo
-					leftSibling := node.children[i-1]
-					leftSibling.keys = append(leftSibling.keys, node.keys[i-1])
-					leftSibling.keys = append(leftSibling.keys, child.keys...)
+					irmaoEsquerdo := node.children[i-1]
+					irmaoEsquerdo.keys = append(irmaoEsquerdo.keys, node.keys[i-1])
+					irmaoEsquerdo.keys = append(irmaoEsquerdo.keys, child.keys...)
 					if !child.leaf {
-						leftSibling.children = append(leftSibling.children, child.children...)
+						irmaoEsquerdo.children = append(irmaoEsquerdo.children, child.children...)
 					}
 					copy(node.keys[i-1:], node.keys[i:])
 					copy(node.children[i:], node.children[i+1:])
 				} else {
 					// Fusão com o irmão direito
-					rightSibling := node.children[i+1]
+					irmaoDireito := node.children[i+1]
 					child.keys = append(child.keys, node.keys[i])
-					child.keys = append(child.keys, rightSibling.keys...)
+					child.keys = append(child.keys, irmaoDireito.keys...)
 					if !child.leaf {
-						child.children = append(child.children, rightSibling.children...)
+						child.children = append(child.children, irmaoDireito.children...)
 					}
 					copy(node.keys[i:], node.keys[i+1:])
 					copy(node.children[i+1:], node.children[i+2:])
@@ -320,14 +296,21 @@ func limString(scanner *bufio.Scanner, info string, limite int) string {
 
 }
 
-func setDados() Contato {
+func setDados(tree *BTree) Contato {
 
 	fmt.Printf("Dados para o contato:\n")
 	var contato Contato
 
 	scanner := bufio.NewScanner(os.Stdin)
 
-	contato.Nome = limString(scanner, "Nome: ", 30)
+	err := 0
+	for err != -1 {
+		contato.Nome = limString(scanner, "Nome: ", 30)
+		_, err = tree.Search(contato.Nome)
+		if err != -1 {
+			fmt.Println("Nome já existente, insira outro")
+		}
+	}
 	contato.Endereco = limString(scanner, "Endereço: ", 50)
 	contato.Telefone = limString(scanner, "Telefone: ", 15)
 
@@ -348,7 +331,11 @@ func initTreeFromFile(fileName string, tree *BTree) int {
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		fmt.Println("Erro ao abrir ou criar o arquivo:", err)
+
+		os.Create("indexFile.txt")
+		os.Create("dataFile.txt")
+
+		fmt.Println("Arquivos de data e index Criados")
 		return 0
 	}
 	defer file.Close()
@@ -380,7 +367,39 @@ func initTreeFromFile(fileName string, tree *BTree) int {
 		tree.Insert(nodo)
 	}
 
-	return maxIndex + 1
+	if maxIndex == 0 {
+		return 0
+	} else {
+		return maxIndex + 1
+	}
+}
+
+func getIndex() int {
+	file, err := os.Open("indexFile.txt")
+	if err != nil {
+
+		os.Create("indexFile.txt")
+		os.Create("dataFile.txt")
+
+		fmt.Println("Arquivos de data e index Criados")
+		return 0
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	maxIndex := 0
+
+	if scanner.Scan(){
+		maxIndex++
+	} else {
+		return 0
+	}
+
+	for scanner.Scan() {
+		maxIndex++
+	}
+
+	return maxIndex
 }
 
 func loadIndex() []DataType {
@@ -423,6 +442,11 @@ func listarContatos(tree *BTree, lixeira bool) {
 
 	agenda := loadData()
 
+	if len(lista) == 0 {
+		fmt.Println("Não há contatos\nPressione enter")
+		fmt.Scanln()
+		return
+	}
 	fmt.Println("\nNome | Endereço | Telefone:")
 	for _, v := range lista {
 		if lixeira == true && agenda[v].Apagado == true {
@@ -431,7 +455,11 @@ func listarContatos(tree *BTree, lixeira bool) {
 			fmt.Printf("%s | %s | %s\n", agenda[v].Nome, agenda[v].Endereco, agenda[v].Telefone)
 		}
 	}
-	fmt.Println()
+
+	fmt.Printf("Pressione enter para Continuar: ")
+	fmt.Scanln()
+	Clear()
+
 }
 
 func loadData() []Contato {
@@ -495,13 +523,13 @@ func enviarParaLixeira(nome string, tree *BTree) {
 		fmt.Println("Contato não encontrado")
 		return
 	}
-	
+
 	agenda := loadData()
-	
+
 	aux := agenda[contato.index]
 	aux.Apagado = true
 	agenda[contato.index] = aux
-	
+
 	saveData(agenda)
 	fmt.Println("Contato enviado para lixeira")
 }
@@ -529,12 +557,27 @@ func restaurarDaLixeira(tree *BTree) {
 	fmt.Println("Contato restaurado da lixeira.")
 }
 
-func esvaziarLixeira(tree *BTree) {
+func esvaziarLixeira(tree *BTree) *BTree {
 
 	lista := make([]int, 0)
 	tree.root.PercursoEmOrdem(&lista)
 	agenda := loadData()
 	apagados := make([]int, 0)
+
+	apagaTudo := true
+	for _, v := range lista {
+		if agenda[v].Apagado == false {
+			apagaTudo = false
+		}
+	}
+
+	if apagaTudo {
+		os.Create("indexFile.txt")
+		os.Create("dataFile.txt")
+		var newTree *BTree
+		newTree = Init()
+		return newTree
+	}
 
 	for _, v := range lista {
 		if agenda[v].Apagado == true {
@@ -570,6 +613,7 @@ func esvaziarLixeira(tree *BTree) {
 	saveData(newAgenda)
 	saveIndex(newIndex)
 
+	return tree
 }
 
 func editarContato(tree *BTree) *BTree {
@@ -577,14 +621,15 @@ func editarContato(tree *BTree) *BTree {
 	fmt.Printf("Nome do contato a ser editado: ")
 	scanner.Scan()
 	nodo, err := tree.Search(scanner.Text())
-
-	if err == -1 {
-		fmt.Println("Contato não encontrado")
+	
+	listaDados := loadData()
+	if err == -1 || listaDados[nodo.index].Apagado == true {
+		fmt.Println("Contato não encontrado\nPressione enter")
+		fmt.Scanln()
 		return tree
 	}
 
-	novosDados := setDados()
-	listaDados := loadData()
+	novosDados := setDados(tree)
 	listaDados[nodo.index] = novosDados
 	saveData(listaDados)
 
@@ -635,8 +680,9 @@ func main() {
 		case 1:
 			listaIndex := loadIndex()
 			listaData := loadData()
+			indexAtual = getIndex()
 
-			contato := setDados()
+			contato := setDados(tree)
 			listaData = append(listaData, contato)
 
 			nodo := DataType{contato.Nome, indexAtual}
@@ -671,18 +717,16 @@ func main() {
 			var confirma rune
 			fmt.Scanf("%c\n", &confirma)
 			if confirma == 's' {
-				esvaziarLixeira(tree)
+				tree = esvaziarLixeira(tree)
 				fmt.Printf("Lixeira esvaziada.\nPressione enter")
 			} else {
 				fmt.Printf("Operação cancelada.\nPressione enter")
 			}
-			
+
 			fmt.Scanln()
 			Clear()
 		case 6:
 			tree = editarContato(tree)
-		case 9:
-			tree.root.Print("", true)
 		}
 
 	}

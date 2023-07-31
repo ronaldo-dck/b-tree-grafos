@@ -193,7 +193,6 @@ private:
                 cout << vertices[nodoAtual].label << "->";
             else
                 cout << vertices[nodoAtual].label;
-            
         }
     }
 
@@ -225,6 +224,11 @@ private:
 
         vector<int> caminho;
         int atual = destino;
+        if (caminhoAnterior[atual] == -1)
+        {
+            cout << "Destino não está conectado\n";
+            return caminho;
+        }
         while (atual != origem && atual != -1)
         {
             caminho.push_back(atual);
@@ -329,20 +333,22 @@ public:
                 destino = i;
             }
         }
-        if ( origin == -1 || destino == -1)
+        if (origin == -1 || destino == -1)
         {
             cout << "Vértices não encontrados.\n";
             return;
         }
 
         vector<int> caminho = __dijkstra(custos, origin, destino);
-
-        cout << vertices[caminho[0]].label;
-        for (int i = 1; i < size(caminho); i++)
+        if (caminho.size())
         {
-            cout << "->" << vertices[caminho[i]].label;
+            cout << vertices[caminho[0]].label;
+            for (int i = 1; i < size(caminho); i++)
+            {
+                cout << "->" << vertices[caminho[i]].label;
+            }
+            cout << endl;
         }
-        cout << endl;
     }
 
     void SalvarGrafo(string nameFile)
@@ -352,12 +358,12 @@ public:
         file << size(vertices) << endl;
         for (int i = 0; i < size(vertices); i++)
         {
-            file << vertices[i].label << " " << vertices[i].x << " " << vertices[i].y << endl;
+            file << vertices[i].label << ";" << vertices[i].x << ";" << vertices[i].y << endl;
         }
         file << size(arestas) << endl;
         for (int i = 0; i < size(arestas); i++)
         {
-            file << arestas[i].label << " " << arestas[i].v1 << " " << arestas[i].v2 << endl;
+            file << arestas[i].label << ";" << arestas[i].v1 << ";" << arestas[i].v2 << endl;
         }
 
         file.close();
@@ -520,9 +526,10 @@ public:
         }
     }
 
-    void PrintCustos() 
+    void PrintCustos()
     {
-        cout << "Matriz de custos" << endl << "     ";
+        cout << "Matriz de custos" << endl
+             << "     ";
         for (int i = 0; i < size(custos); i++)
         {
             cout << " '" << vertices[i].label << "'";
@@ -591,9 +598,15 @@ public:
 
 int main()
 {
-    Grafo G("grafoIn.txt");
-    int op;
     string label, A, B;
+
+    cout<<"Insira o nome do arquivo de Entrada: ";
+    getline(cin,label);
+    system("clear");
+
+
+    Grafo G(label);
+    int op;
     bool isEuler;
 
     while (1)
@@ -646,7 +659,7 @@ int main()
             cout << "Vertice B: ";
             getline(cin, B);
 
-            if (G.InserirAresta(label, A, B)) 
+            if (G.InserirAresta(label, A, B))
                 cout << "Aresta '" << label << "' inserida.\n";
 
             cout << "Pressione enter.";
@@ -745,6 +758,7 @@ int main()
             break;
 
         default:
+            cout << "Opção Inválida\n\n";
             break;
         }
     }
